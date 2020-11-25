@@ -1,0 +1,25 @@
+services:
+  php:
+    image: tugboatqa/php:7.4-apache
+    default: true
+    depends: mysql
+    commands:
+      init:
+        - docker-php-ext-install opcache
+        - a2enmod headers rewrite
+        - ln -snf $TUGBOAT_ROOT/web $DOCROOT
+        - wget -O /usr/local/bin/drush https://github.com/drush-ops/drush-launcher/releases/download/0.6.0/drush.phar
+        - chmod +x /usr/local/bin/drush
+      update:
+        - composer install --optimize-autoloader
+        - mkdir -p "${DOCROOT}/sites/default/files"
+        - chgrp -R www-data "${DOCROOT}/sites/default/files"
+        - find "${DOCROOT}/sites/default/files" -type d -exec chmod 2775 {} \;
+        - find "${DOCROOT}/sites/default/files" -type f -exec chmod 0664 {} \;
+        - composer run-script install:with-mysql
+      build:
+        - composer install --optimize-autoloader
+        - drush updatedb -y
+        - drush cache:rebuild
+  mysql:
+    image: tugboatqa/mariadb:10
