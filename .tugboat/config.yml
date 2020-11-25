@@ -5,6 +5,7 @@ services:
     depends: mysql
     commands:
       init:
+        - composer self-update --1
         - docker-php-ext-install opcache
         - a2enmod headers rewrite
         - ln -snf $TUGBOAT_ROOT/web $DOCROOT
